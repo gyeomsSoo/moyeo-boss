@@ -35,7 +35,27 @@
     onEnd: function () { if (history.state && history.state.moyeo === 'trial') history.back(); }
   });
 
-  var CHECK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  // 손님(청년) 화면 — 처음 설정을 건너뛰려고 go=club 으로 연다(앱이 아는 꼬리는 이것뿐). 모임 탭에서 시작하니
+  // '지도·추천을 눌러 보세요'는 첫 안내(firstHint, 모임 탭이면 바로 사라짐) 대신 늘 보이는 endHint 에 둔다.
+  var guestDemo = new M.Trial({
+    entry: 'user',
+    forceOverlay: true,
+    nowPrefix: '손님 화면 ·',
+    endLabel: '돌아가기',
+    endHint: '아래 지도·추천을 눌러 보세요',
+    onEnd: function () { if (history.state && history.state.moyeo === 'trial') history.back(); }
+  });
+
+  /** [사장님 화면 보기] [손님 화면 보기] 두 버튼 한 줄 */
+  function demoButtons(cls) {
+    var own = el('button', { type: 'button', class: 'btn ' + cls, text: '사장님 화면 보기' });
+    own.addEventListener('click', function () { demo.open({ opener: own }); });
+    var guest = el('button', { type: 'button', class: 'btn ' + cls, text: '손님 화면 보기' });
+    guest.addEventListener('click', function () { guestDemo.open({ query: 'go=club', opener: guest }); });
+    return el('div', { class: 'qr-demos' }, [own, guest]);
+  }
+
+  var CHECK ='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
   var CHECK_BIG = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 
   /** 겸수님이 채울 자리({이름} 같은)가 그대로면 보여 주지 않는다 */
@@ -73,8 +93,6 @@
     var c = intro || {};
     var go = el('button', { type: 'button', class: 'btn primary block', html: '2분 설문 하기 <span class="arrow" aria-hidden="true">→</span>' });
     go.addEventListener('click', function () { scrollToEl(survey); });
-    var look = el('button', { type: 'button', class: 'btn line block', text: '사장님 화면 둘러보기' });
-    look.addEventListener('click', function () { demo.open(); });
     // 제목의 \n 은 줄바꿈으로 (문구 파일에서 끊을 자리를 정한다)
     var h1 = el('h1');
     String(c.title || '사장님, 동네모여를 소개합니다').split('\n').forEach(function (line, i) {
@@ -89,7 +107,7 @@
       h1,
       c.lead ? el('p', { class: 'ow-lead', text: c.lead }) : null,
       badges,
-      el('div', { class: 'qr-cta' }, [go, look, c.cta && c.cta.note ? el('p', { class: 'note', text: c.cta.note }) : null])
+      el('div', { class: 'qr-cta' }, [go, demoButtons('line'), c.cta && c.cta.note ? el('p', { class: 'note', text: c.cta.note }) : null])
     ]);
   }
 
@@ -264,9 +282,7 @@
 
   /* ── 아래: 더 알아보기 (owner.js 와 같은 그림) ── */
   function ctaBlock(c) {
-    var b = el('button', { type: 'button', class: 'btn primary block', html: (c.label || '사장님 화면 둘러보기') + ' <span class="arrow">→</span>' });
-    b.addEventListener('click', function () { demo.open(); });
-    return el('div', { class: 'ow-cta' }, [b, c.note ? el('p', { class: 'note', text: c.note }) : null]);
+    return el('div', { class: 'ow-cta' }, [demoButtons('primary'), c.note ? el('p', { class: 'note', text: c.note }) : null]);
   }
 
   function drawMore(c) {
