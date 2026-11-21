@@ -29,12 +29,13 @@
 <script src="js/core.js" defer></script>
 <script src="js/fields.js" defer></script>
 <script src="js/trial.js" defer></script>
+<script src="js/owner-icons.js" defer></script>
 <script src="js/owner-qr.js" defer></script>
 </head>
 <body>
 <div class="hp" aria-hidden="true"><label>이 칸은 비워 두세요 <input id="hp" name="website" type="text" tabindex="-1" autocomplete="off"></label></div>
 
-<header class="topbar ow-top">
+<header class="topbar ow-top" id="siteTop">
   <a class="wordmark" href="./" aria-label="동네모여 사장님 설문 처음으로">
     <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#2563EB"/><circle cx="10.6" cy="12.2" r="3.3" fill="#fff"/><circle cx="21.4" cy="12.2" r="3.3" fill="#fff"/><circle cx="16" cy="21.6" r="3.3" fill="#fff"/></svg>
     동네모여
@@ -46,7 +47,7 @@
   <div class="ow-loading"><div class="loader" aria-hidden="true"><i></i><i></i><i></i><i></i></div><p>설문을 불러오고 있어요</p></div>
 </main>
 
-<footer class="foot ow-foot">
+<footer class="foot ow-foot" id="siteFoot">
   동네모여 · 충북 제천에서 준비 중인 앱이에요.
 </footer>
 <noscript><p style="padding:20px;font-size:19px">이 페이지는 자바스크립트가 켜져 있어야 보여요.</p></noscript>
