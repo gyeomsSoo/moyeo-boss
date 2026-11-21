@@ -1,0 +1,260 @@
+/* 인터뷰 시트 (/boss/) — 가게에서 대화하며 한 손으로 탭한다.
+ * 카드 넘김이 아니라 구간별로 한 페이지에 쭉. 탭 영역 넉넉히, 글은 또렷하게.
+ */
+
+.hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+
+body { background: var(--paper); }
+
+/* ── 머리 (붙어 있음) ── */
+.bz-top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(255, 255, 255, .97);
+  -webkit-backdrop-filter: saturate(1.4) blur(8px);
+  backdrop-filter: saturate(1.4) blur(8px);
+  border-bottom: 1px solid var(--line);
+  padding-top: var(--safe-t);
+}
+.bz-bar { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 12px 0 6px; max-width: 760px; margin: 0 auto; }
+.bz-drafts {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 10px;
+  min-height: 48px; padding: 0 10px;
+  border: 0; border-radius: 12px; background: transparent;
+  font-size: 18px; font-weight: 800; letter-spacing: -0.03em; text-align: left;
+  transition: background-color 140ms ease, transform 320ms var(--spring);
+}
+.bz-drafts:hover { background: var(--bg); }
+.bz-drafts:active { transform: scale(.97); }
+.bz-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bz-dcount { flex: none; font-size: 13px; font-weight: 700; color: var(--sub); background: var(--bg); padding: 2px 8px; border-radius: 8px; }
+.bz-dcount:empty { display: none; }
+
+.bz-status {
+  display: flex; align-items: center; gap: 6px;
+  max-width: 760px; margin: -6px auto 0; padding: 0 18px 8px;
+  font-size: 13.5px; font-weight: 700; color: var(--mint);
+}
+.bz-status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+.bz-status.wait { color: var(--amber); }
+.bz-status.off { color: var(--coral); }
+.bz-status.idle { color: var(--hint); }
+
+.bz-nav {
+  display: flex; gap: 6px;
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  padding: 0 12px 10px;
+  max-width: 760px; margin: 0 auto;
+  scroll-padding: 0 12px;
+}
+.bz-nav::-webkit-scrollbar { display: none; }
+.bz-nav a {
+  flex: none;
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 40px; padding: 0 12px;
+  border-radius: 11px;
+  background: var(--bg);
+  color: var(--sub);
+  font-size: 14px; font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+.bz-nav a b { font-weight: 800; color: var(--ink); }
+.bz-nav a .n { font-size: 12px; color: var(--hint); font-variant-numeric: tabular-nums; }
+.bz-nav a.on { background: var(--ink); color: #fff; }
+.bz-nav a.on b, .bz-nav a.on .n { color: #fff; }
+.bz-nav a.full .n { color: var(--mint); }
+.bz-nav a.on.full .n { color: #9BE3C6; }
+
+/* ── 본문 ── */
+.bz-main { max-width: 760px; margin: 0 auto; padding: 18px var(--gutter) calc(48px + var(--safe-b)); }
+.bz-loading { padding: 80px 0; display: grid; justify-items: center; gap: 14px; color: var(--sub); }
+
+.bz-head h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.04em; }
+.bz-head .intro { margin-top: 8px; font-size: 15.5px; color: var(--sub); white-space: pre-line; }
+.bz-head .notice { margin-top: 12px; padding: 12px 14px; border-radius: var(--r-m); background: var(--amber-soft); color: var(--amber); font-size: 14.5px; font-weight: 600; line-height: 1.55; white-space: pre-line; }
+.bz-meta { margin-top: 10px; font-size: 13px; color: var(--hint); }
+
+.bz-sec { margin-top: 36px; scroll-margin-top: 130px; }
+.bz-sec > h2 {
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--ink);
+  font-size: 21px; font-weight: 800; letter-spacing: -0.035em;
+}
+.sec-id { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; background: var(--ink); color: #fff; font-size: 15px; flex: none; }
+.sec-n { margin-left: auto; font-size: 13px; font-weight: 700; color: var(--hint); font-variant-numeric: tabular-nums; }
+
+/* 읽어 드릴 말 — 말풍선 */
+.say {
+  position: relative;
+  margin: 18px 0 6px;
+  padding: 14px 16px 15px;
+  border-radius: 18px 18px 18px 6px;
+  background: var(--brand-soft);
+  color: var(--ink);
+}
+.say-tag { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 800; color: var(--brand); margin-bottom: 6px; }
+.say p { font-size: 16.5px; line-height: 1.7; white-space: pre-line; }
+
+.bz-q { padding: 22px 0; border-bottom: 1px solid var(--line); scroll-margin-top: 130px; }
+.bz-q.missing { box-shadow: inset 3px 0 0 var(--coral); margin-left: calc(var(--gutter) * -1); padding-left: var(--gutter); }
+.bz-q.missing .bz-qhead h3 { color: var(--coral); }
+.bz-qhead { display: flex; align-items: baseline; gap: 10px; }
+.q-id { flex: none; font-size: 13px; font-weight: 800; color: var(--hint); min-width: 26px; font-variant-numeric: tabular-nums; }
+.bz-qhead h3 { flex: 1; font-size: 18px; font-weight: 700; line-height: 1.45; letter-spacing: -0.025em; white-space: pre-line; }
+.req { flex: none; font-size: 12px; font-weight: 800; color: var(--coral); background: var(--coral-soft); padding: 2px 7px; border-radius: 7px; }
+.bz-q .note {
+  display: flex; gap: 6px;
+  margin: 8px 0 0 36px;
+  font-size: 13.5px; line-height: 1.55; color: var(--hint);
+  white-space: pre-line;
+}
+.bz-q .note svg { flex: none; margin-top: 3px; }
+.bz-q .help { margin: 6px 0 0 36px; font-size: 14.5px; color: var(--sub); white-space: pre-line; }
+.bz-q .ctl { margin: 14px 0 0 36px; }
+.bz-q .err { margin-left: 36px; }
+
+.bz-q.info .bz-qhead h3 { font-size: 17px; }
+.bz-info {
+  margin: 12px 0 0 36px;
+  padding: 16px;
+  border-radius: var(--r-l);
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+  font-size: 16px; line-height: 1.75;
+  white-space: pre-line;
+}
+
+/* 보기: 짧으면 칩처럼 줄 바꿈, 길면 한 줄씩 */
+.bz-q .opt .key { display: none; }
+.bz-q .opts.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.bz-q .opts.chips .opt { width: auto; min-height: 48px; padding: 10px 14px; gap: 10px; font-size: 16px; }
+.bz-q .opts.chips .opt .mark { width: 20px; height: 20px; }
+.bz-q .opts.chips .opt.on .mark { box-shadow: inset 0 0 0 6px var(--brand); }
+.bz-q .opts.chips .opt.multi.on .mark { box-shadow: none; }
+.bz-q .opt { min-height: 52px; padding: 12px 14px; font-size: 16px; }
+.bz-q .scale .cell { min-height: 52px; }
+
+/* 보내기 */
+.bz-send { margin-top: 36px; padding: 22px 20px; border-radius: var(--r-xl); background: var(--bg); }
+.bz-send h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.03em; }
+.bz-send .sum { margin-top: 6px; font-size: 15px; color: var(--sub); }
+.bz-send .btn { margin-top: 16px; }
+.bz-send .state { margin-top: 12px; font-size: 14.5px; font-weight: 700; color: var(--sub); white-space: pre-line; }
+.bz-send .state.ok { color: var(--mint); }
+.bz-send .state.wait { color: var(--amber); }
+.bz-send .state.bad { color: var(--coral); }
+.bz-missing { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+.bz-missing a { display: inline-flex; align-items: center; min-height: 36px; padding: 0 10px; border-radius: 9px; background: var(--coral-soft); color: var(--coral); font-size: 14px; font-weight: 700; text-decoration: none; }
+.bz-done { margin-top: 18px; padding: 16px; border-radius: var(--r-l); background: var(--mint-soft); color: var(--mint); }
+.bz-done h3 { font-size: 17px; font-weight: 800; }
+.bz-done p { margin-top: 4px; font-size: 14.5px; color: var(--ink); white-space: pre-line; }
+.bz-demo { margin-top: 12px; }
+
+/* ── 가게 목록 시트 ── */
+.bz-sheet-back { position: fixed; inset: 0; z-index: 40; background: rgba(17, 20, 24, .38); animation: fade 200ms ease both; }
+.bz-sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 41;
+  max-width: 640px; margin: 0 auto;
+  max-height: 86vh; max-height: 86dvh;
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: 10px var(--gutter) calc(24px + var(--safe-b));
+  border-radius: 24px 24px 0 0;
+  background: var(--paper);
+  animation: sheetUp 480ms var(--spring) both;
+}
+.bz-sheet::before { content: ""; display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--line-strong); margin: 0 auto 10px; }
+.bz-sheet-head { display: flex; align-items: center; justify-content: space-between; }
+.bz-sheet-head h2 { font-size: 21px; font-weight: 800; }
+.bz-sheet-sub { margin: 4px 0 16px; font-size: 14px; color: var(--sub); }
+.bz-list { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--line); }
+.bz-list li { display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--line); }
+.bz-list .open {
+  flex: 1; min-width: 0;
+  display: block; padding: 14px 4px;
+  border: 0; background: none; text-align: left;
+  border-radius: 10px;
+}
+.bz-list .open:hover { background: var(--bg); }
+.bz-list .open b { display: block; font-size: 17px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bz-list .open span { display: block; margin-top: 2px; font-size: 13.5px; color: var(--sub); }
+.bz-list .cur b::after { content: "지금"; margin-left: 8px; padding: 1px 6px; border-radius: 6px; background: var(--brand-soft); color: var(--brand); font-size: 12px; font-weight: 800; vertical-align: 2px; }
+.bz-list .tag { display: inline-block; margin-left: 4px; font-weight: 800; }
+.bz-list .tag.ok { color: var(--mint); }
+.bz-list .tag.wait { color: var(--amber); }
+.bz-list .tag.edit { color: var(--brand); }
+.bz-list .del { flex: none; min-height: 44px; padding: 0 10px; border: 0; border-radius: 10px; background: none; color: var(--hint); font-size: 14px; font-weight: 700; }
+.bz-list .del:hover { background: var(--bg); color: var(--coral); }
+.bz-list .del.confirm { background: var(--coral); color: #fff; }
+
+/* ── 머리: 스크립트 · QR · 꼭 물을 것만 ── */
+.bz-tool {
+  flex: none;
+  display: inline-flex; align-items: center;
+  min-height: 44px; padding: 0 6px;
+  border-radius: 10px;
+  color: var(--brand); font-size: 15px; font-weight: 700;
+  text-decoration: none; white-space: nowrap;
+}
+.bz-tool:hover { background: var(--bg); }
+.bz-drafts svg { flex: none; }
+.bz-qrbtn { padding: 0 12px; font-weight: 800; letter-spacing: 0.02em; }
+.bz-bar #demoBtn { padding: 0 12px; gap: 5px; }
+
+.bz-row2 { display: flex; align-items: center; gap: 8px; max-width: 760px; margin: -6px auto 0; padding: 0 12px 6px 18px; }
+.bz-row2 .bz-status { flex: 1; min-width: 0; margin: 0; padding: 0; }
+.bz-must {
+  flex: none;
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 40px; padding: 0 4px 0 10px;
+  border: 0; border-radius: 10px; background: transparent;
+  font-size: 14px; font-weight: 800; color: var(--sub); white-space: nowrap;
+}
+.bz-must:hover { background: var(--bg); }
+.bz-must .sw { position: relative; width: 40px; height: 24px; border-radius: 12px; background: var(--line-strong); transition: background-color 160ms ease; }
+.bz-must .sw::after {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .2); transition: transform 260ms var(--spring);
+}
+.bz-must[aria-checked="true"] { color: var(--brand); }
+.bz-must[aria-checked="true"] .sw { background: var(--brand); }
+.bz-must[aria-checked="true"] .sw::after { transform: translateX(16px); }
+
+/* 꼭 물어요 — '필수'(빨강)와 다른 파랑 */
+.must { flex: none; font-size: 12px; font-weight: 800; color: var(--brand); background: var(--brand-soft); padding: 2px 7px; border-radius: 7px; white-space: nowrap; }
+
+/* ── QR 겹침창: 흰 바탕 · 검은 QR · 최대 대비 ── */
+.bz-qr {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: calc(64px + var(--safe-t)) 16px calc(24px + var(--safe-b));
+  background: #fff; color: #111;
+  overflow-y: auto;
+  animation: fade 160ms ease both;
+}
+.bz-qr-close { position: absolute; top: calc(10px + var(--safe-t)); right: 12px; min-width: 72px; color: #111; font-size: 16px; }
+.bz-qr-body { display: flex; flex-direction: column; align-items: center; width: 100%; text-align: center; }
+.bz-qr-img {
+  width: 90vw; height: 90vw;
+  max-width: calc(100vh - 290px); max-height: calc(100vh - 290px);
+  max-width: min(560px, calc(100dvh - 290px)); max-height: min(560px, calc(100dvh - 290px));
+  min-width: 220px; min-height: 220px;
+  image-rendering: pixelated;
+}
+.bz-qr-cap { margin-top: 14px; font-size: 22px; font-weight: 800; letter-spacing: -0.03em; color: #111; }
+.bz-qr-url { margin-top: 6px; font-size: 15px; font-weight: 600; color: #333; word-break: break-all; -webkit-user-select: all; user-select: all; }
+.bz-qr-share { margin-top: 16px; min-width: 200px; }
+.bz-qr-msg { min-height: 24px; margin-top: 10px; font-size: 15px; font-weight: 700; color: #333; }
+.bz-qr-msg.ok { color: var(--mint); }
+.bz-qr-msg.bad { color: var(--coral); }
+
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sheetUp { from { transform: translateY(100%); } to { transform: none; } }
+
+@media (min-width: 760px) {
+  .bz-q .ctl, .bz-q .note, .bz-q .help, .bz-info, .bz-q .err { margin-left: 40px; }
+}

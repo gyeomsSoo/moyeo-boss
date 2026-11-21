@@ -1,0 +1,81 @@
+/* 사장님 QR 설문 (첫 화면) — owner.css(큰 글씨 소개) 위에 설문 칸만 더한다.
+ * 40~60대 사장님이 자기 폰으로 본다: 문항 20px · 보기 18px · 누르는 칸 60px · 회색 글은 진하게.
+ */
+
+/* 맨 위 버튼 두 개 */
+.qr-cta { display: grid; gap: 12px; margin-top: 26px; }
+.qr-cta .btn { min-height: 62px; font-size: 19px; border-radius: 18px; }
+.qr-cta .note { font-size: 16px; line-height: 1.6; color: var(--sub); }
+
+/* 설문 머리 */
+.qr-survey { margin-top: 52px; scroll-margin-top: 12px; }
+.qr-head h2 {
+  font-size: 27px; font-weight: 800; line-height: 1.35; letter-spacing: -0.04em;
+  padding-bottom: 12px; border-bottom: 2px solid var(--ink);
+}
+.qr-intro { margin-top: 14px; font-size: 18.5px; line-height: 1.75; color: var(--ink); white-space: pre-line; }
+.qr-notice {
+  margin-top: 14px; padding: 14px 16px; border-radius: var(--r-m);
+  background: var(--amber-soft); color: var(--amber);
+  font-size: 16.5px; font-weight: 600; line-height: 1.6; white-space: pre-line;
+}
+
+/* 구간 */
+.qr-sec { margin-top: 40px; }
+.qr-sec-title { display: flex; align-items: center; gap: 10px; padding-bottom: 4px; font-size: 21px; font-weight: 800; letter-spacing: -0.03em; }
+.qr-sec-title .no {
+  flex: none; padding: 2px 10px; border-radius: 10px;
+  background: var(--brand); color: #fff;
+  font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums;
+}
+
+/* 문항 */
+.qr-q { padding: 24px 0; border-bottom: 1px solid var(--line); scroll-margin-top: 24px; }
+.qr-qhead { display: flex; align-items: baseline; gap: 10px; }
+.qr-qhead h4 { flex: 1; margin: 0; font-size: 20px; font-weight: 700; line-height: 1.5; letter-spacing: -0.025em; white-space: pre-line; }
+.qr-q .req { flex: none; font-size: 13px; font-weight: 800; color: var(--coral); background: var(--coral-soft); padding: 2px 8px; border-radius: 8px; }
+.qr-q .help { margin-top: 6px; font-size: 16.5px; line-height: 1.65; color: var(--sub); white-space: pre-line; }
+.qr-q .ctl { margin-top: 16px; }
+.qr-q .opt { min-height: 60px; padding: 14px 16px; font-size: 18px; }
+.qr-q .opt .key { display: none; }
+.qr-q .opts.two { grid-template-columns: 1fr 1fr; }
+.qr-q .field { min-height: 60px; font-size: 18px; }
+.qr-q .counter { font-size: 15px; }
+.qr-q .err { font-size: 17px; }
+.qr-q.missing { box-shadow: inset 4px 0 0 var(--coral); margin-left: calc(var(--gutter) * -1); padding-left: var(--gutter); }
+.qr-q.missing .qr-qhead h4 { color: var(--coral); }
+.qr-q.info .qr-qhead h4 { font-size: 19px; }
+.qr-info {
+  margin-top: 12px; padding: 16px 18px; border-radius: var(--r-l);
+  background: var(--bg);
+  font-size: 17px; line-height: 1.8; white-space: pre-line;
+}
+
+/* 보내기 */
+.qr-send { margin-top: 32px; }
+.qr-msg { margin-bottom: 12px; color: var(--coral); font-size: 17px; font-weight: 700; }
+.qr-msg:empty { display: none; }
+.qr-submit { min-height: 64px; font-size: 20px; border-radius: 18px; }
+.qr-send-note { margin-top: 10px; font-size: 15px; line-height: 1.6; color: var(--sub); text-align: center; }
+
+/* 보낸 뒤 */
+.qr-done { padding: 28px 22px 18px; border-radius: var(--r-xl); background: var(--mint-soft); animation: rise 380ms var(--ease) both; }
+.qr-done .ck { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 16px; background: var(--mint); color: #fff; }
+.qr-done h2 { margin-top: 16px; font-size: 27px; font-weight: 800; line-height: 1.35; letter-spacing: -0.04em; }
+.qr-done .body { margin-top: 10px; font-size: 18.5px; line-height: 1.75; white-space: pre-line; }
+.qr-status { margin-top: 14px; font-size: 16px; font-weight: 700; color: var(--mint); }
+.qr-status.wait { color: var(--amber); }
+.qr-status.bad { color: var(--coral); }
+.qr-again { margin-top: 8px; font-size: 16px; color: var(--sub); }
+.qr-again .textlink { font-size: 16px; padding: 0 2px; text-decoration: underline; text-underline-offset: 3px; }
+
+/* 더 알아보기 */
+.qr-more { margin-top: 72px; padding-top: 28px; border-top: 8px solid var(--bg); }
+.qr-more-title { font-size: 16px; font-weight: 800; color: var(--brand); }
+.qr-more > .ow-sec:first-of-type { margin-top: 14px; }
+
+@media (min-width: 760px) {
+  .qr-cta { grid-template-columns: 1fr 1fr; }
+  .qr-cta .note { grid-column: 1 / -1; }
+  .qr-head h2, .qr-done h2 { font-size: 32px; }
+}

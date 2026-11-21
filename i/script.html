@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#FFFFFF">
+<title>현장 스크립트</title>
+<link rel="icon" href="../img/icon.svg" type="image/svg+xml">
+<style>
+  :root {
+    --bg: #FFFFFF;
+    --ink: #191F28;
+    --ink-2: #4E5968;
+    --ink-3: #8B95A1;
+    --line: #E5E8EB;
+    --soft: #F2F4F6;
+    --blue: #2563EB;
+    --blue-soft: #EEF4FF;
+    --warn: #C2410C;
+    --warn-soft: #FFF4ED;
+    --ok: #0F766E;
+    --ok-soft: #ECFDF8;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-padding-top: 108px; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+    font-size: 17px; line-height: 1.6; word-break: keep-all; overflow-wrap: anywhere;
+  }
+  .top {
+    position: sticky; top: 0; z-index: 5; background: rgba(255,255,255,.96);
+    border-bottom: 1px solid var(--line); padding: 10px 16px 0;
+    padding-top: max(10px, env(safe-area-inset-top));
+  }
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 720px; margin: 0 auto; }
+  .bar h1 { font-size: 18px; margin: 0; font-weight: 800; }
+  .back {
+    display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 14px;
+    border-radius: 12px; background: var(--blue); color: #fff; font-weight: 700; text-decoration: none; font-size: 16px;
+  }
+  nav.chips { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 10px; max-width: 720px; margin: 0 auto; scrollbar-width: none; }
+  nav.chips::-webkit-scrollbar { display: none; }
+  nav.chips a {
+    flex: none; padding: 7px 12px; border-radius: 999px; background: var(--soft); color: var(--ink-2);
+    text-decoration: none; font-size: 14px; font-weight: 700; white-space: nowrap;
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 8px 16px 72px; }
+  section { padding: 22px 0 6px; border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: 0; }
+  h2 { font-size: 22px; line-height: 1.35; margin: 0 0 10px; font-weight: 800; }
+  h2 .n { display: inline-block; min-width: 28px; color: var(--blue); }
+  h3 { font-size: 18px; margin: 18px 0 6px; font-weight: 800; }
+  p { margin: 0 0 10px; }
+  ul, ol { margin: 0 0 12px; padding-left: 22px; }
+  li { margin: 4px 0; }
+  .muted { color: var(--ink-2); font-size: 15px; }
+  .tag {
+    display: inline-block; font-size: 12px; font-weight: 800; padding: 2px 7px; border-radius: 6px;
+    background: var(--soft); color: var(--ink-2); vertical-align: 2px; margin-left: 4px;
+  }
+  .goal { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0 12px; }
+  .goal div { background: var(--blue-soft); border-radius: 16px; padding: 14px 16px; }
+  .goal b { display: block; font-size: 30px; line-height: 1.1; color: var(--blue); font-weight: 800; }
+  .goal span { font-size: 15px; color: var(--ink-2); font-weight: 600; }
+  .say {
+    background: var(--blue-soft); border-left: 4px solid var(--blue); border-radius: 4px 14px 14px 4px;
+    padding: 12px 14px; margin: 8px 0 12px; font-size: 18px; line-height: 1.65;
+  }
+  .say::before { content: "이렇게 말해요"; display: block; font-size: 12px; font-weight: 800; color: var(--blue); margin-bottom: 2px; letter-spacing: .02em; }
+  .say.short::before { content: "짧게"; }
+  .say.no::before { content: "거절하시면"; }
+  .box { border-radius: 14px; padding: 12px 14px; margin: 8px 0 12px; }
+  .box.warn { background: var(--warn-soft); }
+  .box.warn strong { color: var(--warn); }
+  .box.ok { background: var(--ok-soft); }
+  .box.ok strong { color: var(--ok); }
+  .step { border: 1px solid var(--line); border-radius: 16px; padding: 14px 14px 4px; margin: 12px 0; }
+  .step-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .step-h h3 { margin: 0; }
+  .step-h .t { flex: none; font-size: 14px; color: var(--ink-3); font-weight: 700; }
+  .q { font-weight: 700; }
+  .ids { color: var(--ink-3); font-size: 13px; font-weight: 700; }
+  details { border: 1px solid var(--line); border-radius: 14px; margin: 8px 0; }
+  details[open] { background: #FAFBFC; }
+  summary { cursor: pointer; list-style: none; padding: 13px 14px; font-weight: 700; display: flex; gap: 8px; align-items: flex-start; }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "Q"; color: var(--blue); font-weight: 800; flex: none; }
+  details > div { padding: 0 14px 12px 34px; }
+  .check li { list-style: none; position: relative; padding-left: 4px; }
+  .check { padding-left: 24px; }
+  .check li::before { content: ""; position: absolute; left: -22px; top: .35em; width: 16px; height: 16px; border: 2px solid var(--ink-3); border-radius: 5px; }
+  .dont li::marker { content: "✕  "; color: var(--warn); font-weight: 800; }
+  .foot { text-align: center; color: var(--ink-3); font-size: 14px; padding: 24px 0 0; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="bar">
+    <h1>현장 스크립트</h1>
+    <a class="back" href="./">← 시트로</a>
+  </div>
+  <nav class="chips" aria-label="바로가기">
+    <a href="#goal">목표</a>
+    <a href="#before">들어가기 전</a>
+    <a href="#open">첫 20초</a>
+    <a href="#flow">대화 순서</a>
+    <a href="#short">5분 버전</a>
+    <a href="#faq">이런 질문엔</a>
+    <a href="#dont">하지 말 것</a>
+    <a href="#staff">알바만 있을 때</a>
+    <a href="#after">나와서</a>
+  </nav>
+</header>
+
+<main>
+
+<section id="goal">
+  <h2>오늘 목표</h2>
+  <div class="goal">
+    <div><b>10곳</b><span>사장님과 대화</span></div>
+    <div><b>3곳+</b><span>약속 받기</span></div>
+  </div>
+  <p><strong>약속</strong>은 설문 답이 아니라 행동이에요. 아래 중 하나라도 받으면 약속 1곳이에요.</p>
+  <ul>
+    <li>연락처를 주셨다 <span class="ids">F6 예</span></li>
+    <li>앱 지도에 가게를 올려도 된다 <span class="ids">F2 괜찮다</span></li>
+    <li>사진을 찍어 가도 된다 <span class="ids">F3 지금 찍어도 된다</span></li>
+  </ul>
+  <p class="muted">10곳을 채우려면 가게 리스트를 15곳은 들고 나가요. 손님이 있는 가게는 넘기고 돌아오는 길에 다시 들러요.</p>
+</section>
+
+<section id="before">
+  <h2>들어가기 전</h2>
+  <h3>집에서 나오기 전</h3>
+  <ul class="check">
+    <li>폰 충전, 보조배터리</li>
+    <li>이 시트를 와이파이에서 한 번 열어 두기 (지하 가게에서도 열리게)</li>
+    <li>시트 위 <b>시연</b>을 한 번 눌러 사장님 화면이 뜨는지 확인</li>
+    <li>시트 위 <b>QR</b>을 눌러 내 폰 카메라로 찍어 보기</li>
+    <li>학생증, 가게 리스트 15곳</li>
+  </ul>
+  <h3>가게 앞에서 30초</h3>
+  <ul>
+    <li>손님이 줄 서 있거나 계산 중이면 <b>들어가지 않아요.</b> 다음 가게로 갔다가 돌아와요.</li>
+    <li>시트에서 <b>새 가게 시작</b>을 누르고 가게 이름부터 적어 둬요.</li>
+    <li>일요일은 가장 바쁜 날이고, 사장님 대신 알바생만 있을 수 있어요. 문 연 직후부터 이른 오후까지가 좋아요.</li>
+  </ul>
+</section>
+
+<section id="open">
+  <h2>첫 20초</h2>
+  <p class="say">안녕하세요, 사장님. 바쁘신데 잠깐 실례할게요. 세명대 컴퓨터학부 이겸수입니다. 제천 청년들이 관심사랑 시간이 맞는 사람끼리 모여서 이런 가게로 같이 놀러 오게 해 주는 앱 ‘동네모여’를 만들고 있어요. 모두의창업 2차에 올라가서, 문 열기 전에 사장님들 이야기를 먼저 듣고 다니는 중이에요. 뭘 가입하시라는 건 아니고, 10분 정도 여쭤봐도 될까요?</p>
+  <p class="say short">동네 청년 모임 앱을 만드는 학생인데요, 사장님 의견 몇 가지만 여쭤봐도 될까요? 지금 바쁘시면 몇 시쯤 다시 오면 될까요?</p>
+  <p class="say no">네, 바쁘신데 죄송해요. 그럼 QR만 보여 드릴게요. 나중에 시간 나실 때 찍으시면 2분이면 돼요.</p>
+  <p class="muted">그래도 괜찮다고 하시면 “감사합니다” 하고 나와요. 두 번 조르지 않아요.</p>
+</section>
+
+<section id="flow">
+  <h2>대화 순서 <span class="tag">7~10분</span></h2>
+  <p>시트에 <b>꼭 물어요</b> 표시가 붙은 문항이 이 순서예요. <b>앱 설명은 ③에서 처음 해요.</b> 설명부터 하면 그 뒤 답이 전부 예의상 “좋네요”가 돼요.</p>
+
+  <div class="step">
+    <div class="step-h"><h3>① 가게</h3><span class="t">1분</span></div>
+    <p class="say">손님이 좀 적어서 아쉬운 때가 언제예요?</p>
+    <p class="say">계산은 보통 어떻게 하세요? 1인 얼마로 정해져 있어요, 시간으로 빌려요, 아니면 나갈 때 쓴 만큼 내요?</p>
+    <p class="ids">A1 가게 이름 · A2 업종 · A5 누구랑 이야기 중인지 · A10 · A12</p>
+  </div>
+
+  <div class="step">
+    <div class="step-h"><h3>② 지금 겪는 일</h3><span class="t">2분</span></div>
+    <p class="say">4명 넘게 단체로 오는 손님은 얼마나 돼요?</p>
+    <p class="say">예약해 놓고 안 오는 손님은 좀 있으세요? 그럴 땐 어떻게 하세요?</p>
+    <div class="box ok"><strong>여기가 제일 값진 부분이에요.</strong> 말씀이 길어지면 끊지 말고 들어요. 기억할 말은 그대로 B6에 적어요.</div>
+    <p class="ids">B2 · B3 · B5 · (B6 기억할 말)</p>
+  </div>
+
+  <div class="step">
+    <div class="step-h"><h3>③ 시연</h3><span class="t">1분</span></div>
+    <p class="say">말로 하는 것보다 보시는 게 빠를 것 같아요. 사장님 화면을 잠깐 보여 드릴게요.</p>
+    <ol>
+      <li>시트 위 <b>시연</b> 누르기</li>
+      <li>오늘 탭 예약 카드 → <b>[받기]</b></li>
+      <li>체크인 QR과 명단 (닉네임 · 체크인 여부만 보여요)</li>
+      <li>가게 탭: 빈 시간 열기 · 오늘 하루 닫기 · 자동 수락</li>
+    </ol>
+    <p class="muted">돈 얘기는 여기서 하지 않아요. ⑤에서 해요.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-h"><h3>④ 반응</h3><span class="t">1분</span></div>
+    <p class="say">어떠세요? 별로면 별로라고 편하게 말씀해 주세요. 그게 저한테 제일 도움이 돼요.</p>
+    <p class="say">직접 쓰실 수 있을 것 같으세요? 걸리시는 점은요?</p>
+    <p class="ids">D1 · D3 · (D4 하신 말)</p>
+  </div>
+
+  <div class="step">
+    <div class="step-h"><h3>⑤ 돈</h3><span class="t">2분</span></div>
+    <p class="say">돈 얘기는 아직 정해진 게 하나도 없어서, 사장님들 말씀을 듣고 정하려고 해요. 시범 기간에는 사장님께 받는 돈이 없어요.</p>
+    <p class="say">모임 손님이 예약해 놓고 안 오면, 사장님께 뭐가 있어야 공평하다고 보세요?</p>
+    <p class="say">손님이 이용료를 앱에서 미리 내고 오는 방식도 생각하고 있어요. 가격은 가게 가격 그대로고, 손님이 안 오면 미리 낸 돈은 가게 몫이에요. 앱 수수료는 그 돈에서 떼고요. 이런 방식이면 어떠세요?</p>
+    <p class="muted">좋은 점과 수수료를 <b>같이</b> 말해요. 수수료 %나 정산 주기(E11·E12)는 분위기가 좋을 때만 물어요. “몇 %까지?”에는 다들 낮게 답하니 참고만 해요.</p>
+    <p class="ids">E1 · E2</p>
+  </div>
+
+  <div class="step">
+    <div class="step-h"><h3>⑥ 약속</h3><span class="t">1분</span></div>
+    <p class="say">앱이 열리면 써 보실 생각 있으세요?</p>
+    <p class="say">앱 지도에 가게 이름, 주소, 영업시간을 먼저 올려 둬도 될까요? 누구나 볼 수 있는 정보만 올려요.</p>
+    <p class="say">가게 페이지에 쓸 사진을 오늘 몇 장 찍어 가도 될까요?</p>
+    <p class="muted">사진은 간판과 내부 전경 3~5장. 손님이나 직원 얼굴이 나오지 않게 찍어요.</p>
+    <p>연락처는 시트의 <b>F5 안내를 폰 화면으로 보여 드리며 그대로 읽은 뒤</b> 여쭤요.</p>
+    <p class="ids">F1 · F2 · F3 · F5 · F6~F8</p>
+  </div>
+
+  <div class="step">
+    <div class="step-h"><h3>⑦ 마무리</h3><span class="t">30초</span></div>
+    <p>시트 위 <b>QR</b>을 띄워 보여 드려요.</p>
+    <p class="say">이거 찍으시면 오늘 말씀드린 내용이 정리돼 있어요. 아시는 사장님 계시면 보내 주셔도 좋아요.</p>
+    <p class="say">혹시 주변에 이런 거 관심 있으실 만한 사장님 계세요?</p>
+    <p class="muted">소개받은 가게는 G3에 적어요. 다음 방문지 1순위예요.</p>
+  </div>
+</section>
+
+<section id="short">
+  <h2>시간이 없을 때 · 5분 버전</h2>
+  <p>② 지금 겪는 일 → 앱 한 줄 소개 → ⑥ 약속 → QR</p>
+  <p class="say">동네 청년 3명 이상이 모여서 가게로 놀러 오게 하는 앱인데요, 사장님은 받고 싶은 시간만 열어 두시고 요청이 오면 받기만 누르시면 돼요. 시범 기간엔 비용이 없어요.</p>
+  <p class="muted">줄이는 순서: ⑤ 돈(E2만 남기기) → ③ 시연(QR로 대신) → ① 가게(A2·A10만). <b>②와 ⑥은 줄이지 않아요.</b></p>
+</section>
+
+<section id="faq">
+  <h2>이런 질문이 나오면</h2>
+  <p class="muted">모르는 건 지어내지 말고 “아직 안 정했어요, 그래서 여쭤보는 거예요”라고 해요. 그게 오늘 방문의 이유예요.</p>
+
+  <details>
+    <summary>그래서 손님이 몇 명이나 오는데요?</summary>
+    <div><p>아직 문 열기 전이라 약속드릴 숫자는 없어요. 지금 제천 청년들한테 설문을 받으면서 베타테스터를 모으고 있고, 베타는 신청한 청년들로 시작해요. 시범 기간엔 비용이 없어서 사장님이 손해 보실 건 없어요.</p></div>
+  </details>
+  <details>
+    <summary>수수료 있어요?</summary>
+    <div><p>시범 기간에는 받지 않아요. 그 뒤의 방식과 금액은 아직 정하지 않았고, 사장님들 말씀을 듣고 정할 거예요. 정해지면 시작하기 전에 먼저 알려 드릴게요.</p></div>
+  </details>
+  <details>
+    <summary>노쇼 나면 어떡해요?</summary>
+    <div><p>모임 전에 앱이 참가자들에게 미리 알림을 보내고, 약속을 어긴 사람은 기록이 남아 한동안 모임에 못 들어와요. 노쇼로 생긴 가게 손해를 어떻게 할지는 아직 안 정했어요. 그래서 오늘 여쭤보는 거예요.</p></div>
+  </details>
+  <details>
+    <summary>이상한 손님 오면요?</summary>
+    <div><p>모임은 3명 이상이 모여서 공개된 가게에서만 만나요. 약속을 어기거나 신고가 들어온 사람은 기록이 남아요.</p></div>
+  </details>
+  <details>
+    <summary>손님 개인정보는요?</summary>
+    <div><p>사장님 화면에는 손님 닉네임과 체크인했는지만 보여요. 그것도 모임 당일에만요. 이름이나 전화번호는 넘어가지 않아요.</p></div>
+  </details>
+  <details>
+    <summary>네이버 예약이랑 뭐가 달라요?</summary>
+    <div><p>네이버는 이미 가게를 찾는 손님이 써요. 동네모여는 아직 같이 갈 사람이 없던 청년들이 모임을 만들어서 가게로 가요. 새로 생기는 손님이에요. 네이버 예약은 지금처럼 쓰시면 돼요.</p></div>
+  </details>
+  <details>
+    <summary>어려우면요? 폰 볼 시간 없어요.</summary>
+    <div><p>누를 버튼은 [받기]와 [어려워요] 두 개예요. 자동 수락을 켜 두시면 그것도 안 누르셔도 돼요. 처음 쓰실 땐 찾아와서 같이 켜 드릴게요.</p></div>
+  </details>
+  <details>
+    <summary>사업자등록증 드려야 돼요?</summary>
+    <div><p>안 받아요. 가입은 나중에 사장님 폰에서 직접 하시고, 가게 확인은 사업자번호 같은 번호 몇 가지로만 해요. 오늘은 아무것도 안 받아요.</p></div>
+  </details>
+  <details>
+    <summary>언제 열어요?</summary>
+    <div><p>제천에서 베타테스트부터 시작해요. 날짜가 정해지면 연락처 주신 분께 먼저 알려 드릴게요.</p></div>
+  </details>
+</section>
+
+<section id="dont">
+  <h2>하지 말 것</h2>
+  <ul class="dont">
+    <li>손님 수, 여는 날짜, 수수료를 <b>약속하지 않기</b></li>
+    <li>“좋죠?”처럼 답을 정해 놓고 묻지 않기. “어떠세요?”로 물어요.</li>
+    <li>사업자등록증 사진, 계좌를 받지 않기</li>
+    <li>사장님 계정을 대신 만들지 않기</li>
+    <li>네이버 같은 다른 곳 사진을 가져다 쓰지 않기 (저작권)</li>
+    <li>손님이 있을 때 붙잡지 않기, 두 번 조르지 않기</li>
+  </ul>
+</section>
+
+<section id="staff">
+  <h2>알바생만 있을 때</h2>
+  <p class="say">사장님은 보통 언제 나오세요?</p>
+  <p class="say">사장님께 이거 전해 주실 수 있을까요? 직원분 폰으로 QR을 찍어서 카톡으로 보내 주시면 돼요. 2분짜리 설문이에요.</p>
+  <ul>
+    <li>시트: A1 가게 이름 · A5 <b>직원·매니저</b> · G3에 “사장님 ○시 계심”</li>
+    <li>사장님 연락처를 직원분께 달라고 하지 않아요. 사장님 동의 없이 받는 게 돼요.</li>
+    <li>사장님 계신 시간에 맞춰 다시 들를 수 있으면 G2 우선순위를 높게.</li>
+  </ul>
+</section>
+
+<section id="after">
+  <h2>가게를 나와서 1분</h2>
+  <ul class="check">
+    <li>G2 후속 연락 우선순위</li>
+    <li>G3 후속 할 일 (소개받은 가게, 다시 올 시간, 보낼 것)</li>
+    <li>맨 아래 <b>보내기</b>. 신호가 없어도 폰에 쌓였다가 연결되면 가요.</li>
+  </ul>
+  <p class="muted">다음 가게에 들어가면 앞 가게 말씀은 섞여서 잊어요. 꼭 나오자마자 적어요.</p>
+  <h3>하루 끝</h3>
+  <p>시트 ‘사장님 인터뷰’ 탭에서 대화한 곳과 약속 받은 곳(F6 예 · F2 괜찮다 · F3 지금 찍어도 된다)을 세어요. QR 설문으로 들어온 답은 <b>_버전</b> 칸이 <b>owner-qr-v1</b>이에요.</p>
+</section>
+
+<p class="foot">동네모여 · 사장님 방문용</p>
+</main>
+
+</body>
+</html>

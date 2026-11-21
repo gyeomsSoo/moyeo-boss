@@ -1,0 +1,101 @@
+/* 사장님 소개 (/owner/) — 명함 카드 QR 의 목적지. 40~60대 사장님이 카운터 뒤에서 폰으로 본다.
+ * 본문 19px · 줄 간격 넉넉히 · 회색 글은 진하게 · 버튼은 60px 에 글자로 말한다.
+ */
+
+.hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+
+body { font-size: 19px; line-height: 1.75; }
+
+.ow-top { max-width: 760px; margin: 0 auto; justify-content: space-between; height: 64px; }
+.ow-top .wordmark { font-size: 20px; }
+.ow-top .wordmark svg { width: 32px; height: 32px; }
+.ow-tag { font-size: 15px; font-weight: 700; color: var(--sub); padding: 6px 12px; border-radius: 10px; background: var(--bg); }
+
+.ow { max-width: 760px; margin: 0 auto; padding: 8px var(--gutter) 48px; }
+.ow-loading { padding: 80px 0; display: grid; justify-items: center; gap: 14px; color: var(--sub); }
+
+.ow-hero { padding: 12px 0 8px; }
+.ow-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 700; color: var(--brand); margin-bottom: 12px; }
+.ow-hero h1 { font-size: 31px; line-height: 1.35; font-weight: 800; letter-spacing: -0.04em; }
+.ow-lead { margin-top: 16px; font-size: 19px; line-height: 1.8; color: var(--ink); }
+
+.ow-cta { margin-top: 26px; }
+.ow-cta .btn { min-height: 62px; font-size: 19px; border-radius: 18px; }
+.ow-cta .note { margin-top: 10px; font-size: 16px; line-height: 1.6; color: var(--sub); }
+
+.ow-sec { margin-top: 52px; }
+.ow-sec > h2 {
+  font-size: 25px; font-weight: 800; letter-spacing: -0.035em;
+  padding-bottom: 12px; border-bottom: 2px solid var(--ink);
+}
+
+/* 이렇게 돌아가요 — 번호가 줄로 이어진다 */
+.ow-steps { list-style: none; margin: 0; padding: 0; }
+.ow-steps li { position: relative; display: grid; grid-template-columns: 48px 1fr; gap: 16px; padding: 22px 0 6px; }
+.ow-steps li::before {
+  content: ""; position: absolute; left: 23px; top: 70px; bottom: -22px; width: 2px; background: var(--line-strong);
+}
+.ow-steps li:last-child::before { display: none; }
+.ow-steps .no {
+  position: relative; z-index: 1;
+  display: grid; place-items: center;
+  width: 48px; height: 48px; border-radius: 15px;
+  background: var(--brand); color: #fff;
+  font-size: 22px; font-weight: 800;
+}
+.ow-steps h3 { font-size: 21px; font-weight: 800; line-height: 1.45; letter-spacing: -0.03em; padding-top: 8px; }
+.ow-steps p { margin-top: 6px; color: var(--ink); white-space: pre-line; }
+
+/* 좋은 점 */
+.ow-points { list-style: none; margin: 0; padding: 0; }
+.ow-points li { display: grid; grid-template-columns: 32px 1fr; gap: 14px; padding: 20px 0; border-bottom: 1px solid var(--line); }
+.ow-points .ck { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: var(--mint-soft); color: var(--mint); margin-top: 2px; }
+.ow-points h3 { font-size: 20px; font-weight: 800; line-height: 1.45; letter-spacing: -0.025em; }
+.ow-points p { margin-top: 4px; color: var(--sub); white-space: pre-line; }
+
+/* 자주 묻는 것 */
+.ow-faq { border-top: 0; }
+.ow-faq details { border-bottom: 1px solid var(--line); }
+.ow-faq summary {
+  list-style: none;
+  display: flex; align-items: center; gap: 12px;
+  min-height: 64px; padding: 14px 0;
+  font-size: 19.5px; font-weight: 700; line-height: 1.5;
+  cursor: pointer;
+}
+.ow-faq summary::-webkit-details-marker { display: none; }
+.ow-faq summary .q { flex: none; font-weight: 800; color: var(--brand); }
+.ow-faq summary .t { flex: 1; }
+.ow-faq summary .pm {
+  flex: none; position: relative; width: 32px; height: 32px; border-radius: 10px; background: var(--bg);
+}
+.ow-faq summary .pm::before, .ow-faq summary .pm::after {
+  content: ""; position: absolute; left: 9px; right: 9px; top: 15px; height: 2.4px; border-radius: 2px; background: var(--ink);
+  transition: transform 260ms var(--spring);
+}
+.ow-faq summary .pm::after { transform: rotate(90deg); }
+.ow-faq details[open] summary .pm::after { transform: rotate(0); }
+.ow-faq summary:focus-visible { outline-offset: -2px; }
+.ow-faq .a { padding: 0 0 20px 32px; color: var(--ink); white-space: pre-line; animation: rise 260ms var(--ease) both; }
+
+/* 연락처 */
+.ow-contact { margin-top: 52px; padding: 24px 22px; border-radius: var(--r-xl); background: var(--bg); }
+.ow-contact h2 { font-size: 22px; font-weight: 800; }
+.ow-contact .who { margin-top: 8px; font-size: 20px; font-weight: 700; }
+.ow-contact .note { margin-top: 6px; color: var(--sub); white-space: pre-line; }
+.ow-contact .ways { margin-top: 8px; }
+.ow-contact .way { padding: 18px 0 4px; border-top: 1px solid var(--line-strong); margin-top: 14px; }
+.ow-contact .label { font-size: 15px; font-weight: 700; color: var(--sub); }
+.ow-contact .val { font-size: 24px; font-weight: 800; letter-spacing: 0.01em; color: var(--ink); }
+.ow-contact .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.ow-contact .btn { min-height: 58px; font-size: 18px; }
+.ow-contact .way > .btn { margin-top: 14px; }
+
+.ow-foot { max-width: 760px; margin: 0 auto; font-size: 15px; color: var(--sub); }
+
+@media (min-width: 760px) {
+  .ow-hero h1 { font-size: 40px; }
+  .ow-cta { display: flex; align-items: center; gap: 20px; }
+  .ow-cta .btn { padding: 0 34px; }
+  .ow-cta .note { margin-top: 0; max-width: 22em; }
+}
