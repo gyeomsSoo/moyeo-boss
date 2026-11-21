@@ -112,6 +112,26 @@
     return node;
   }
 
+  /** 붙박이 위 막대(진행) · 아래 막대([다음]) 사이에 보이도록 스크롤 — scrollIntoView('nearest') 는
+   *  화면 안이면 가만있어서, 아래 막대 뒤에 깔린 칸을 그대로 둔다. alignTop 이면 위 막대 바로 아래로 */
+  function bringIntoView(node, alignTop) {
+    if (!node || !node.isConnected || node.hidden) return;
+    var r = node.getBoundingClientRect();
+    var topLim = 0, botLim = window.innerHeight, pad = 16;
+    if (view === 'survey' && surveyView) {
+      var tb = surveyView.querySelector('.qs-top');
+      if (tb) topLim = tb.getBoundingClientRect().bottom;
+      if (navEl) botLim = Math.min(botLim, navEl.getBoundingClientRect().top);
+    }
+    var dy = 0;
+    if (alignTop) dy = r.top - (topLim + pad);
+    else {
+      if (r.bottom > botLim - pad) dy = r.bottom - (botLim - pad);
+      if (r.top - dy < topLim + pad) dy = r.top - (topLim + pad);     // 큰 상자면 윗부분이 먼저 보이게
+    }
+    if (Math.abs(dy) > 1) window.scrollBy({ top: dy, behavior: smooth() });
+  }
+
   function hstate() { var s = history.state; return s && s.moyeo === HK ? s : null; }
   function hpush(st, url) { st.moyeo = HK; try { history.pushState(st, '', url); } catch (e) { /* 무시 */ } }
   function hreplace(st, url) { st.moyeo = HK; try { history.replaceState(st, '', url); } catch (e) { /* 무시 */ } }
@@ -459,7 +479,8 @@
     if (vis.length !== 1) return null;
     var q = vis[0];
     var lay = q.ui && q.ui.layout;
-    if (q.type === 'single' && !q.other && lay !== 'chips') return q;
+    // '기타 (직접 입력)' 을 골라 둔 동안은 적을 시간을 준다 → 넘어가지 않고 [다음]
+    if (q.type === 'single' && lay !== 'chips' && state.answers[q.id] !== F.OTHER) return q;
     if (q.type === 'select' && lay === 'grid') return q;
     return null;
   }
@@ -504,7 +525,7 @@
     paintProgress();
     if (shown.length && !info.typing) {
       var first = shown[0];
-      setTimeout(function () { if (first.isConnected && !first.hidden) first.scrollIntoView({ behavior: smooth(), block: 'nearest' }); }, 60);
+      setTimeout(function () { bringIntoView(first); }, 60);
     }
     if (info.advance) {
       var auto = autoQ();
@@ -545,7 +566,7 @@
       if (cardEl) { cardEl.classList.remove('nudge'); void cardEl.offsetWidth; cardEl.classList.add('nudge'); }
       var pb = blocks[probs[0].q.id];
       if (pb) {
-        pb.scrollIntoView({ behavior: smooth(), block: 'nearest' });
+        bringIntoView(pb.err && pb.err.textContent ? pb.err : pb);   // 알림 글이 보이게
         var inp = /기타/.test(probs[0].msg) ? pb.querySelector('.qother:not([hidden]) input') : (probs[0].q.type === 'text' ? pb.querySelector('input, textarea') : null);
         if (inp) { try { inp.focus({ preventScroll: true }); } catch (e) { inp.focus(); } }
       }
@@ -594,7 +615,8 @@
       return b;
     }
 
-    var t = el(lead ? 'h2' : 'h3', { class: lead ? 'qc-title' : 'qb-title', id: 'qt-' + q.id, tabindex: lead ? '-1' : null });
+    var long = String(q.text || '').length > 24;     // 문장형 긴 질문은 한 단계 작게 (두 줄 안에)
+    var t = el(lead ? 'h2' : 'h3', { class: (lead ? 'qc-title' : 'qb-title') + (long ? ' long' : ''), id: 'qt-' + q.id, tabindex: lead ? '-1' : null });
     t.appendChild(document.createTextNode(q.text));
     if (lead && !q.required && q.type !== 'info') t.appendChild(el('span', { class: 'opt-chip', text: '선택' }));
     b.appendChild(t);
@@ -632,6 +654,47 @@
     return b;
   }
   function check(b, on) { b.setAttribute('aria-checked', on ? 'true' : 'false'); }
+
+  /** 보기 값 목록: other: true 면 끝에 F.OTHER ('기타 (직접 입력)' — fields.js 와 같은 표식, 보낼 때 "기타: …") */
+  function valuesOf(q) { return q.options.concat(q.other ? [F.OTHER] : []); }
+
+  /** 기타 글 칸: 고르면 열리고 커서가 들어간다. 글은 state.others[q.id] */
+  function otherBox(q, on) {
+    var input = el('input', { class: 'field', type: 'text', maxlength: '200', autocomplete: 'off', placeholder: '직접 적어 주세요', 'aria-label': '기타 내용', enterkeyhint: 'done' });
+    input.value = state.others[q.id] || '';
+    input.addEventListener('input', function () { state.others[q.id] = input.value; changed(q, { typing: true }); });
+    var box = el('div', { class: 'qother', hidden: !on }, [input]);
+    box.sync = function (show, focus) {
+      var was = box.hidden;
+      box.hidden = !show;
+      if (show && was && focus) {
+        setTimeout(function () {
+          try { input.focus({ preventScroll: true }); } catch (e) { input.focus(); }
+          bringIntoView(box);
+        }, 60);
+      }
+    };
+    return box;
+  }
+
+  /** 하나 고르기 공통: 고른 표시 · 기타 칸 · (기타가 아니면) 넘어가기 */
+  function singlePicker(q, all, box) {
+    return function (v) {
+      setAnswer(q, v);
+      all.forEach(function (x) { check(x.b, x.v === v); });
+      if (box) box.sync(v === F.OTHER, true);
+      changed(q, { advance: v !== F.OTHER });
+    };
+  }
+
+  /** 조용한 줄 보기 ('모르겠다' · '기타 (직접 입력)' 같은) */
+  function quietRow(role, label, ic, on) {
+    return choice('qm-row quiet' + (ic ? ' has-ic' : ''), role, on, [
+      ic ? el('span', { class: 'qm-ic', 'aria-hidden': 'true', html: icon(ic) }) : null,
+      el('span', { class: 'qm-t', text: label }),
+      tick()
+    ]);
+  }
   function group(role, q, kids, cls) { return el('div', { class: cls || null, role: role, 'aria-labelledby': 'qt-' + q.id }, kids); }
 
   /** 칩 하나: 앞 아이콘(없으면 동그라미) 자리에 고르면 체크가 들어온다 */
@@ -697,7 +760,7 @@
     function open(on, scroll) {
       panel.hidden = !on;
       moreBtn.setAttribute('aria-expanded', on ? 'true' : 'false');
-      if (on && scroll) setTimeout(function () { moreBtn.scrollIntoView({ behavior: smooth(), block: 'start' }); }, 40);
+      if (on && scroll) setTimeout(function () { bringIntoView(moreBtn, true); }, 40);
     }
     moreBtn.addEventListener('click', function () { open(panel.hidden, true); });
     function paintMore() {
@@ -760,53 +823,59 @@
     // 칸에 없는 보기는 전부 칩으로 (ui.extra 순서 먼저, 빠진 보기가 있어도 고를 수 있게)
     var extra = (Array.isArray(ui.extra) ? ui.extra : []).filter(function (o) { return q.options.indexOf(o) >= 0 && covered.indexOf(o) < 0; });
     q.options.forEach(function (o) { if (covered.indexOf(o) < 0 && extra.indexOf(o) < 0) extra.push(o); });
+    if (q.other) extra.push(F.OTHER);                                             // 기타는 칩 줄 맨 끝
+    var values = valuesOf(q);
     var chips = el('div', { class: 'qchips', role: 'group', 'aria-label': '그 밖의 때' });
     extra.forEach(function (o) {
-      var b = chip('checkbox', o, icons[o], cur().indexOf(o) >= 0);
+      var b = chip('checkbox', o === F.OTHER ? OTHER_LABEL : o, o === F.OTHER ? 'edit' : icons[o], cur().indexOf(o) >= 0);
       if (excl.indexOf(o) >= 0) b.classList.add('excl');
       b.addEventListener('click', function () { toggle(o); });
       chips.appendChild(b);
       btns.push({ b: b, v: o });
     });
+    var box = q.other ? otherBox(q, cur().indexOf(F.OTHER) >= 0) : null;
     function toggle(v) {
       var now = cur();
       if (now.indexOf(v) >= 0) now = now.filter(function (x) { return x !== v; });
-      else if (excl.indexOf(v) >= 0) now = [v];                                  // '딱히 없다' 는 다른 것을 지운다
-      else { now = now.filter(function (x) { return excl.indexOf(x) < 0; }); now.push(v); }   // 다른 것을 고르면 '딱히 없다' 를 지운다
-      now = q.options.filter(function (o) { return now.indexOf(o) >= 0; });
+      else if (excl.indexOf(v) >= 0) now = [v];                                  // '딱히 없다' 는 다른 것(기타 포함)을 지운다
+      else { now = now.filter(function (x) { return excl.indexOf(x) < 0; }); now.push(v); }   // 다른 것(기타 포함)을 고르면 '딱히 없다' 를 지운다
+      now = values.filter(function (o) { return now.indexOf(o) >= 0; });          // 보기 순서대로, 기타는 끝
       setAnswer(q, now);
       btns.forEach(function (x) { check(x.b, now.indexOf(x.v) >= 0); });
+      if (box) box.sync(now.indexOf(F.OTHER) >= 0, v === F.OTHER);
       changed(q, {});
     }
-    return el('div', { class: 'qw-wrap' }, [table, chips]);
+    return el('div', { class: 'qw-wrap' }, box ? [table, chips, box] : [table, chips]);
   }
 
-  /* meter — 얼마나 자주: 줄마다 점 0~3개. levels 가 null 인 보기는 점 없이 조용한 글 보기 */
+  /* meter — 얼마나 자주: 줄마다 점 0~3개. levels 가 null 인 보기와 기타는 점 없이 조용한 글 보기(맨 아래) */
   function drawMeter(q) {
     var levels = (q.ui && q.ui.levels) || {};
     var max = 1;
     q.options.forEach(function (o) { if (typeof levels[o] === 'number') max = Math.max(max, levels[o]); });
     var cur = state.answers[q.id];
-    var rows = [];
-    var list = group('radiogroup', q, [], 'qm-list');
-    q.options.forEach(function (o) {
-      var lv = levels[o];
-      var quiet = typeof lv !== 'number';
-      var dots = null;
-      if (!quiet) {
-        dots = el('span', { class: 'qm-dots', 'aria-hidden': 'true' });
-        for (var i = 0; i < max; i++) dots.appendChild(el('i', { class: i < lv ? 'on' : null }));
+    var all = [];
+    var box = q.other ? otherBox(q, cur === F.OTHER) : null;
+    var pick = singlePicker(q, all, box);
+    var list = el('div', { class: 'qm-list' });
+    valuesOf(q).forEach(function (o) {
+      var b;
+      if (o === F.OTHER) b = quietRow('radio', OTHER_LABEL, 'edit', cur === o);
+      else {
+        var lv = levels[o];
+        var quiet = typeof lv !== 'number';
+        var dots = null;
+        if (!quiet) {
+          dots = el('span', { class: 'qm-dots', 'aria-hidden': 'true' });
+          for (var i = 0; i < max; i++) dots.appendChild(el('i', { class: i < lv ? 'on' : null }));
+        }
+        b = choice('qm-row' + (quiet ? ' quiet' : ''), 'radio', cur === o, [dots, el('span', { class: 'qm-t', text: o }), tick()]);
       }
-      var b = choice('qm-row' + (quiet ? ' quiet' : ''), 'radio', cur === o, [dots, el('span', { class: 'qm-t', text: o }), tick()]);
-      b.addEventListener('click', function () {
-        setAnswer(q, o);
-        rows.forEach(function (x) { check(x.b, x.v === o); });
-        changed(q, { advance: true });
-      });
+      b.addEventListener('click', function () { pick(o); });
       list.appendChild(b);
-      rows.push({ b: b, v: o });
+      all.push({ b: b, v: o });
     });
-    return list;
+    return group('radiogroup', q, box ? [list, box] : [list], 'qm-group');
   }
 
   /* story — 안내: 그림 세 단계가 차례로 떠오른다 */
@@ -842,14 +911,11 @@
     var primary = Array.isArray(ui.primary) ? ui.primary.filter(function (o) { return opts.indexOf(o) >= 0; }) : [];
     var big = primary.length ? primary : opts;
     var rest = primary.length ? opts.filter(function (o) { return primary.indexOf(o) < 0; }) : [];
-    var two = !primary.length && opts.length === 2 && opts.every(function (o) { return o.length <= 6; });
+    var two = !primary.length && !q.other && opts.length === 2 && opts.every(function (o) { return o.length <= 6; });
     var cur = state.answers[q.id];
     var all = [];
-    function pick(o) {
-      setAnswer(q, o);
-      all.forEach(function (x) { check(x.b, x.v === o); });
-      changed(q, { advance: true });
-    }
+    var box = q.other ? otherBox(q, cur === F.OTHER) : null;
+    var pick = singlePicker(q, all, box);
     var list = el('div', { class: 'qk-list' + (two ? ' two' : '') });
     big.forEach(function (o) {
       var parts = o.split(/\s+—\s+/);
@@ -867,16 +933,25 @@
     });
     var kids = [list];
     if (rest.length) {
+      // 큰 카드 밖의 보기 + 기타는 '또는' 아래 작은 칩
+      if (q.other) rest = rest.concat([F.OTHER]);
       kids.push(el('p', { class: 'qk-or', 'aria-hidden': 'true', text: '또는' }));
       var chips = el('div', { class: 'qchips' });
       rest.forEach(function (o) {
-        var b = chip('radio', o, icons[o], cur === o);
+        var b = chip('radio', o === F.OTHER ? OTHER_LABEL : o, o === F.OTHER ? 'edit' : icons[o], cur === o);
         b.addEventListener('click', function () { pick(o); });
         chips.appendChild(b);
         all.push({ b: b, v: o });
       });
       kids.push(chips);
+    } else if (q.other) {
+      // 큰 카드만 있으면 기타는 카드 아래 조용한 한 줄
+      var ob = quietRow('radio', OTHER_LABEL, 'edit', cur === F.OTHER);
+      ob.addEventListener('click', function () { pick(F.OTHER); });
+      all.push({ b: ob, v: F.OTHER });
+      kids.push(el('div', { class: 'qm-list qk-quiet' }, [ob]));
     }
+    if (box) kids.push(box);
     return group('radiogroup', q, kids, 'qk-group');
   }
 
@@ -893,13 +968,7 @@
     var isOn = function (v) { return multi ? curArr().indexOf(v) >= 0 : state.answers[q.id] === v; };
     var btns = [];
     var box = el('div', { class: 'qchips' });
-    var other = null, otherInput = null;
-    if (q.other) {
-      otherInput = el('input', { class: 'field', type: 'text', maxlength: '200', autocomplete: 'off', placeholder: '직접 적어 주세요', 'aria-label': '기타 내용', enterkeyhint: 'done' });
-      otherInput.value = state.others[q.id] || '';
-      otherInput.addEventListener('input', function () { state.others[q.id] = otherInput.value; changed(q, { typing: true }); });
-      other = el('div', { class: 'qother', hidden: !isOn(F.OTHER) }, [otherInput]);
-    }
+    var other = q.other ? otherBox(q, isOn(F.OTHER)) : null;
     values.forEach(function (v, i) {
       var b = chip(multi ? 'checkbox' : 'radio', labels[i], v === F.OTHER ? 'edit' : icons[v], isOn(v));
       b.addEventListener('click', function () { toggle(v); });
@@ -919,31 +988,24 @@
         setAnswer(q, v);
       }
       btns.forEach(function (x) { check(x.b, isOn(x.v)); });
-      var otherOn = isOn(F.OTHER);
-      if (other) {
-        var was = other.hidden;
-        other.hidden = !otherOn;
-        if (otherOn && was) setTimeout(function () { try { otherInput.focus({ preventScroll: true }); } catch (e) { otherInput.focus(); } other.scrollIntoView({ behavior: smooth(), block: 'nearest' }); }, 60);
-      }
+      if (other) other.sync(isOn(F.OTHER), v === F.OTHER);
       changed(q, { advance: !multi && v !== F.OTHER });
     }
     return group(multi ? 'group' : 'radiogroup', q, other ? [box, other] : [box], 'qchip-group');
   }
 
-  /* scale — 금액 · %: 왼쪽에서 오른쪽으로 높아지는 계단 막대. '모르겠다…' 는 계단 밖 조용한 보기 */
+  /* scale — 금액 · %: 왼쪽에서 오른쪽으로 높아지는 계단 막대(6칸 이상은 폰에서 3+3). '모르겠다…' 와 기타는 계단 밖 조용한 보기 */
   function drawScale(q) {
     var opts = q.options;
     var quiet = opts.filter(function (o) { return /^모르겠다/.test(o); });
     var steps = opts.filter(function (o) { return quiet.indexOf(o) < 0; });
+    if (q.other) quiet = quiet.concat([F.OTHER]);
     var n = steps.length;
     var cur = state.answers[q.id];
     var all = [];
-    function pick(o) {
-      setAnswer(q, o);
-      all.forEach(function (x) { check(x.b, x.v === o); });
-      changed(q, { advance: true });
-    }
-    var ruler = el('div', { class: 'qsc', style: '--n:' + Math.max(1, n) });
+    var box = q.other ? otherBox(q, cur === F.OTHER) : null;
+    var pick = singlePicker(q, all, box);
+    var ruler = el('div', { class: 'qsc' + (n >= 6 ? ' many' : ''), style: '--n:' + Math.max(1, n) });
     steps.forEach(function (o, i) {
       var h = n > 1 ? Math.round(24 + (i / (n - 1)) * 76) : 60;
       var b = choice('qsc-s', 'radio', cur === o, [
@@ -958,13 +1020,14 @@
     if (quiet.length) {
       var ql = el('div', { class: 'qm-list qsc-quiet' });
       quiet.forEach(function (o) {
-        var b = choice('qm-row quiet', 'radio', cur === o, [el('span', { class: 'qm-t', text: o }), tick()]);
+        var b = o === F.OTHER ? quietRow('radio', OTHER_LABEL, 'edit', cur === o) : quietRow('radio', o, null, cur === o);
         b.addEventListener('click', function () { pick(o); });
         ql.appendChild(b);
         all.push({ b: b, v: o });
       });
       kids.push(ql);
     }
+    if (box) kids.push(box);
     return group('radiogroup', q, kids, 'qsc-group');
   }
 
@@ -978,7 +1041,7 @@
       var bp = posOfQ(bad.q);
       if (bp >= 0 && bp !== curPos) { hpush({ v: 'card', s: secs[bp].id, d: depth() + 1 }, '#survey'); showCard(bp, 'back'); }
       var bx = blocks[bad.q.id];
-      if (bx && bx.err) { bx.err.textContent = bad.msg; bx.classList.add('missing'); setTimeout(function () { bx.scrollIntoView({ behavior: smooth(), block: 'nearest' }); }, 60); }
+      if (bx && bx.err) { bx.err.textContent = bad.msg; bx.classList.add('missing'); setTimeout(function () { bringIntoView(bx); }, 60); }
       return;
     }
     submitting = true;
