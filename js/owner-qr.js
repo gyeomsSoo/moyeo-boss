@@ -75,10 +75,20 @@
     go.addEventListener('click', function () { scrollToEl(survey); });
     var look = el('button', { type: 'button', class: 'btn line block', text: '사장님 화면 둘러보기' });
     look.addEventListener('click', function () { demo.open(); });
+    // 제목의 \n 은 줄바꿈으로 (문구 파일에서 끊을 자리를 정한다)
+    var h1 = el('h1');
+    String(c.title || '사장님, 동네모여를 소개합니다').split('\n').forEach(function (line, i) {
+      if (i) h1.appendChild(el('br'));
+      h1.appendChild(document.createTextNode(line));
+    });
+    var badges = Array.isArray(c.badges) && c.badges.length
+      ? el('ul', { class: 'qr-badges' }, c.badges.map(function (b) { return el('li', { text: String(b) }); }))
+      : null;
     return el('section', { class: 'ow-hero' }, [
-      el('p', { class: 'ow-eyebrow', text: '동네 가게 사장님께' }),
-      el('h1', { text: c.title || '사장님, 동네모여를 소개합니다' }),
+      el('p', { class: 'ow-eyebrow', text: c.eyebrow || '동네 가게 사장님께' }),
+      h1,
       c.lead ? el('p', { class: 'ow-lead', text: c.lead }) : null,
+      badges,
       el('div', { class: 'qr-cta' }, [go, look, c.cta && c.cta.note ? el('p', { class: 'note', text: c.cta.note }) : null])
     ]);
   }
